@@ -29,7 +29,8 @@ func main() {
 		handler.Login(store, w, r)
 	})
 
-	// mux.HandleFunc("/login/", handler.Login)
+	mux.HandleFunc("/upload", handler.UploadFile)
+	mux.HandleFunc("/serve/", handler.ServeImage)
 
 	mux.Handle("/", &homeHandler{})
 	mux.Handle("/user", userHandler)
