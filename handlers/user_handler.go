@@ -24,6 +24,7 @@ func hashPassword(password string) (string, error) {
 type userStore interface {
 	Add(user usermodel.User) error
 	Get(id string) (usermodel.User, error)
+	GetEmail(email string) (usermodel.User, error)
 	Update(id string, user usermodel.User) (usermodel.User, error)
 	List() ([]usermodel.User, error)
 	Remove(id string) error
@@ -89,11 +90,9 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		InternalServerErrorHandler(w, r)
 		return
 	}
-
-	json.NewEncoder(w).Encode(user)
-
 	// Set the status code to 200
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
 }
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
@@ -104,8 +103,8 @@ func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 			InternalServerErrorHandler(w, r)
 			return
 		}
-		json.NewEncoder(w).Encode(resources)
 		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(resources)
 	})).ServeHTTP(w, r)
 }
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +132,7 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 	// Set the "Content-Type: application/json" header on the response.
 	w.Header().Set("Content-Type", "application/json")
-
+	w.WriteHeader(http.StatusOK)
 	// Encode the user object to JSON and write it to the response.
 	err = json.NewEncoder(w).Encode(user)
 	if err != nil {
@@ -143,7 +142,6 @@ func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 }
 
 func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -169,8 +167,9 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		InternalServerErrorHandler(w, r)
 		return
 	}
-	json.NewEncoder(w).Encode(user)
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
+
 }
 func (h *UserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	matches := UserReWithID.FindStringSubmatch(r.URL.Path)

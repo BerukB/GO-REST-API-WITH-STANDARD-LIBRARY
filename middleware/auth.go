@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 )
@@ -14,14 +15,14 @@ func JWTAuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-
+		tokenString = strings.Replace(tokenString, "Bearer ", "", 1)
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
 
-			return []byte("secret"), nil
+			return []byte("12345678"), nil
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)

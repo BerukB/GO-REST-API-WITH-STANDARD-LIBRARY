@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -22,20 +23,21 @@ type LoginResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func Login(store userStore, w http.ResponseWriter, r *http.Request) {
 	var user usermodel.User
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	store := usermodel.NewMemStore()
-
-	foundUser, err := store.Get(user.ID)
+	fmt.Println("user: ", user.Email)
+	foundUser, err := store.GetEmail(user.Email)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "Invalid user", http.StatusUnauthorized)
 		return
 	}
 	hashedPassword := foundUser.PassWord
+
+	fmt.Println("hashedPassword", hashedPassword)
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.PassWord))
 	if err != nil {

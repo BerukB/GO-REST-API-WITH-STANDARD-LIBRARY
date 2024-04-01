@@ -3,6 +3,7 @@ package usermodel
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var (
@@ -13,8 +14,8 @@ type MemStore struct {
 	list []User
 }
 
-func NewMemStore() *MemStore {
-	return &MemStore{list: []User{}}
+func NewMemStore(initialUsers []User) *MemStore {
+	return &MemStore{list: initialUsers}
 }
 
 func (m *MemStore) Add(user User) error {
@@ -29,6 +30,14 @@ func (m MemStore) List() ([]User, error) {
 func (m MemStore) Get(id string) (User, error) {
 	for _, user := range m.list {
 		if user.ID == id {
+			return user, nil
+		}
+	}
+	return User{}, ErrNotFound
+}
+func (m MemStore) GetEmail(email string) (User, error) {
+	for _, user := range m.list {
+		if strings.EqualFold(user.Email, email) {
 			return user, nil
 		}
 	}
