@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -33,15 +32,12 @@ func Login(store userStore, w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fmt.Println("user: ", user.Email)
 	foundUser, err := store.GetEmail(user.Email)
 	if err != nil {
-		http.Error(w, "Invalid user", http.StatusUnauthorized)
+		http.Error(w, "Invalid user", http.StatusConflict)
 		return
 	}
 	hashedPassword := foundUser.PassWord
-
-	fmt.Println("hashedPassword", hashedPassword)
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(user.PassWord))
 	if err != nil {

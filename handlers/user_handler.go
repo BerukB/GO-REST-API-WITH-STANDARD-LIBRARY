@@ -77,6 +77,13 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		InternalServerErrorHandler(w, r)
 		return
 	}
+
+	_, err := h.store.GetEmail(user.Email)
+	if err == nil {
+		http.Error(w, "User already exists ", http.StatusConflict)
+		return
+	}
+
 	user.ID = strconv.Itoa(rand.Intn(100000000))
 	hashedPassword, err := hashPassword(user.PassWord)
 	if err != nil {
