@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	handler "github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/handlers"
+	"github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/middleware"
 	usermodel "github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/models"
 )
 
@@ -33,7 +34,7 @@ func main() {
 	mux.HandleFunc("/serve/", handler.ServeImage)
 
 	mux.Handle("/", &homeHandler{})
-	mux.Handle("/user", userHandler)
+	mux.Handle("/user", middleware.MultipleMiddleware(userHandler, middleware.TimeoutMiddleware, middleware.JWTAuthMiddleware))
 	mux.Handle("/user/", userHandler)
 
 	http.ListenAndServe(":8080", mux)

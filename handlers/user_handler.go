@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"time"
 
-	middleware "github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/middleware"
 	usermodel "github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/models"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -101,15 +101,14 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	middleware.JWTAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resources, err := h.store.List()
-		if err != nil {
-			InternalServerErrorHandler(w, r)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(resources)
-	})).ServeHTTP(w, r)
+	time.Sleep(5 * time.Second)
+	resources, err := h.store.List()
+	if err != nil {
+		InternalServerErrorHandler(w, r)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resources)
 }
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	matches := UserReWithID.FindStringSubmatch(r.URL.Path)
