@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	usermodel "github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/models"
+	"github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/validation"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -84,7 +85,18 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		InternalServerErrorHandler(w, r)
 		return
 	}
-
+	if err := validation.ValidateEmail(user.Email); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validation.ValidatePhone(user.Phone); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validation.ValidateAddress(user.Address); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	_, err := h.store.GetEmail(user.Email)
 	if err == nil {
 		http.Error(w, "User already exists ", http.StatusConflict)
@@ -92,6 +104,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.ID = strconv.Itoa(rand.Intn(100000000))
+	formattedPhone := user.Phone.Format()
+	user.Phone = usermodel.PhoneNumber(formattedPhone)
 	hashedPassword, err := hashPassword(user.PassWord)
 	if err != nil {
 		InternalServerErrorHandler(w, r)
