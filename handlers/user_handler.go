@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
-	"time"
 
 	usermodel "github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/models"
 	"golang.org/x/crypto/bcrypt"
@@ -101,7 +100,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(5 * time.Second)
+	// time.Sleep(5 * time.Second)
 	resources, err := h.store.List()
 	if err != nil {
 		InternalServerErrorHandler(w, r)
