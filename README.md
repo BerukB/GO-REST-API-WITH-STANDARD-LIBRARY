@@ -1,6 +1,14 @@
-# GO-REST-API-WITH-STANDARD-LIBRARY
+# Go REST API with Standard Library
 
-This repository contains a simple RESTful API built with Go's standard library. It provides functionality for user authentication, file upload, and image serving.
+This project implements a simple REST API using only the standard library of Go. It provides endpoints for user management, authentication, file uploading, and serving images.
+
+## Features
+
+- **User Management**: Create, retrieve, update, and delete user records.
+- **Authentication**: Basic login functionality with password hashing and JWT authentication.
+- **File Upload**: Allows users to upload image files.
+- **Image Serving**: Serves uploaded images over HTTP.
+- **Middleware**: Includes middleware for request timeout, request ID generation, and JWT authentication.
 
 ## Installation
 
@@ -16,63 +24,56 @@ This repository contains a simple RESTful API built with Go's standard library. 
     cd GO-REST-API-WITH-STANDARD-LIBRARY
     ```
 
-3. Install dependencies:
+3. Install external dependencies:
 
     ```bash
-    # No external dependencies required as the project uses only Go's standard library.
+    go get github.com/dgrijalva/jwt-go
+    go get golang.org/x/crypto/bcrypt
     ```
+
+4. Run the following command to start the server:
+
+    ```bash
+    go run main.go
+    ```
+
+5. The server will start running on port `8080`.
 
 ## Usage
 
-### Running the Server
-
-To start the server, run the following command:
-
-```bash
-go run main.go
-```
-
-The server will start listening on port `8080` by default.
-
 ### Endpoints
 
-- **Login Endpoint**: 
-  - URL: `/login`
-  - Method: POST
-  - Description: Endpoint for user authentication. It returns access and refresh tokens upon successful login.
+- **POST /login**: User login endpoint.
+- **POST /upload**: File upload endpoint.
+- **GET /v1/images/{imageName}**: Image serving endpoint.
+- **GET /user**: List all users.
+- **GET /user/{userID}**: Get user by ID.
+- **POST /user**: Create a new user.
+- **PUT /user/{userID}**: Update user by ID.
+- **DELETE /user/{userID}**: Delete user by ID.
 
-- **File Upload Endpoint**:
-  - URL: `/upload`
-  - Method: POST
-  - Description: Endpoint for uploading files. It expects a file field named "image" in the request.
+### Authentication
 
-- **Image Serving Endpoint**:
-  - URL: `/serve/{imageName}`
-  - Method: GET
-  - Description: Endpoint for serving images. Replace `{imageName}` with the filename of the image you want to retrieve.
+- Authentication for user-related endpoints is handled via JWT tokens.
+- To access user-related endpoints, include a valid JWT token in the request headers.
 
-- **User Management Endpoints**:
-  - `/user`: 
-    - Methods: GET (List all users), POST (Create a new user)
-  - `/user/{userID}`:
-    - Methods: GET (Retrieve user by ID), PUT (Update user by ID), DELETE (Delete user by ID)
+### File Upload
 
-- **Home Page**:
-  - URL: `/`
-  - Description: Simple home page that displays "This is my home page".
+- To upload a file, send a POST request to `/upload` with a `multipart/form-data` body containing the file.
 
-### Dependencies
+### Image Serving
 
-- `net/http`: Provides HTTP client and server implementations.
-- `github.com/dgrijalva/jwt-go`: Package for JWT handling.
-- `golang.org/x/crypto/bcrypt`: Package for hashing and comparing passwords securely.
+- Uploaded images can be accessed via the `/v1/images/{imageName}` endpoint.
+
+## Dependencies
+
+- **github.com/dgrijalva/jwt-go**: Provides functionality for handling JWT tokens in Go.
+- **golang.org/x/crypto/bcrypt**: Provides functions for hashing and comparing passwords using the bcrypt hashing algorithm.
 
 ## Contributing
 
-Contributions are welcome! Feel free to submit pull requests or open issues for any improvements or bug fixes.
+Contributions are welcome! Please feel free to open issues or submit pull requests.
 
-## GitHub Repository
+---
 
-The source code for this project is hosted on GitHub:
-
-[GO-REST-API-WITH-STANDARD-LIBRARY](https://github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY)
+Feel free to further customize the README to include any additional information specific to your project. Let me know if you need further assistance!

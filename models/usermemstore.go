@@ -23,8 +23,18 @@ func (m *MemStore) Add(user User) error {
 	return nil
 }
 
-func (m MemStore) List() ([]User, error) {
-	return m.list, nil
+func (m *MemStore) List(page, limit int) ([]User, error) {
+	start := (page - 1) * limit
+	end := start + limit
+
+	if start > len(m.list) {
+		return []User{}, nil
+	}
+
+	if end > len(m.list) {
+		end = len(m.list)
+	}
+	return m.list[start:end], nil
 }
 
 func (m MemStore) Get(id string) (User, error) {

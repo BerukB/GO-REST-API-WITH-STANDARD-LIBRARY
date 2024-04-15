@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strconv"
 
-	middleware "github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/middleware"
 	usermodel "github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/models"
+	"github.com/BerukB/GO-REST-API-WITH-STANDARD-LIBRARY/validation"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -21,12 +21,20 @@ func hashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
+type Response struct {
+	MetaData struct {
+		Page    int `json:"page"`
+		PerPage int `json:"per_page"`
+	} `json:"meta_data"`
+	Data []usermodel.User `json:"data"`
+}
+
 type userStore interface {
 	Add(user usermodel.User) error
 	Get(id string) (usermodel.User, error)
 	GetEmail(email string) (usermodel.User, error)
 	Update(id string, user usermodel.User) (usermodel.User, error)
-	List() ([]usermodel.User, error)
+	List(page, limit int) ([]usermodel.User, error)
 	Remove(id string) error
 }
 
@@ -77,7 +85,18 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		InternalServerErrorHandler(w, r)
 		return
 	}
-
+	if err := validation.ValidateEmail(user.Email); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validation.ValidatePhone(user.Phone); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := validation.ValidateAddress(user.Address); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 	_, err := h.store.GetEmail(user.Email)
 	if err == nil {
 		http.Error(w, "User already exists ", http.StatusConflict)
@@ -85,6 +104,8 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.ID = strconv.Itoa(rand.Intn(100000000))
+	formattedPhone := user.Phone.Format()
+	user.Phone = usermodel.PhoneNumber(formattedPhone)
 	hashedPassword, err := hashPassword(user.PassWord)
 	if err != nil {
 		InternalServerErrorHandler(w, r)
@@ -101,15 +122,50 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	middleware.JWTAuthMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		resources, err := h.store.List()
+	// time.Sleep(5 * time.Second)
+	page := 1
+	limit := 10
+
+	// Read pagination parameters from the query string
+	pageQuery := r.URL.Query().Get("page")
+	limitQuery := r.URL.Query().Get("limit")
+
+	if pageQuery != "" {
+		var err error
+		page, err = strconv.Atoi(pageQuery)
 		if err != nil {
-			InternalServerErrorHandler(w, r)
+			http.Error(w, "Invalid page parameter", http.StatusBadRequest)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(resources)
-	})).ServeHTTP(w, r)
+	}
+	if limitQuery != "" {
+		var err error
+		limit, err = strconv.Atoi(limitQuery)
+		if err != nil {
+			http.Error(w, "Invalid limit parameter", http.StatusBadRequest)
+			return
+		}
+	}
+
+	// Fetch users with pagination
+	resources, err := h.store.List(page, limit)
+	if err != nil {
+		InternalServerErrorHandler(w, r)
+		return
+	}
+	response := Response{
+		MetaData: struct {
+			Page    int `json:"page"`
+			PerPage int `json:"per_page"`
+		}{
+			Page:    page,
+			PerPage: limit,
+		},
+		Data: resources,
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	matches := UserReWithID.FindStringSubmatch(r.URL.Path)
