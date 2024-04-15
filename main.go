@@ -31,7 +31,7 @@ func main() {
 	})
 
 	mux.HandleFunc("/upload", handler.UploadFile)
-	mux.HandleFunc("/serve/", handler.ServeImage)
+	mux.HandleFunc("/v1/images/", handler.ServeImage)
 
 	mux.Handle("/", &homeHandler{})
 	mux.Handle("/user", middleware.MultipleMiddleware(userHandler, middleware.TimeoutMiddleware, middleware.SetCtxRequestID, middleware.JWTAuthMiddleware))
