@@ -20,12 +20,20 @@ func hashPassword(password string) (string, error) {
 	return string(hashedPassword), nil
 }
 
+type Response struct {
+	MetaData struct {
+		Page    int `json:"page"`
+		PerPage int `json:"per_page"`
+	} `json:"meta_data"`
+	Data []usermodel.User `json:"data"`
+}
+
 type userStore interface {
 	Add(user usermodel.User) error
 	Get(id string) (usermodel.User, error)
 	GetEmail(email string) (usermodel.User, error)
 	Update(id string, user usermodel.User) (usermodel.User, error)
-	List() ([]usermodel.User, error)
+	List(page, limit int) ([]usermodel.User, error)
 	Remove(id string) error
 }
 
@@ -101,13 +109,49 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	// time.Sleep(5 * time.Second)
-	resources, err := h.store.List()
+	page := 1
+	limit := 10
+
+	// Read pagination parameters from the query string
+	pageQuery := r.URL.Query().Get("page")
+	limitQuery := r.URL.Query().Get("limit")
+
+	if pageQuery != "" {
+		var err error
+		page, err = strconv.Atoi(pageQuery)
+		if err != nil {
+			http.Error(w, "Invalid page parameter", http.StatusBadRequest)
+			return
+		}
+	}
+	if limitQuery != "" {
+		var err error
+		limit, err = strconv.Atoi(limitQuery)
+		if err != nil {
+			http.Error(w, "Invalid limit parameter", http.StatusBadRequest)
+			return
+		}
+	}
+
+	// Fetch users with pagination
+	resources, err := h.store.List(page, limit)
 	if err != nil {
 		InternalServerErrorHandler(w, r)
 		return
 	}
+	response := Response{
+		MetaData: struct {
+			Page    int `json:"page"`
+			PerPage int `json:"per_page"`
+		}{
+			Page:    page,
+			PerPage: limit,
+		},
+		Data: resources,
+	}
+
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resources)
+	json.NewEncoder(w).Encode(response)
 }
 func (h *UserHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	matches := UserReWithID.FindStringSubmatch(r.URL.Path)
